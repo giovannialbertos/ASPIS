@@ -200,12 +200,14 @@ fi;
 echo -e "=== Front-end and pre-processing ==="
 
 ## FRONTEND
-exe $CLANG $input_files $clang_options -S -emit-llvm -O0 -Xclang -disable-O0-optnone -mllvm -opaque-pointers
+exe $CLANG $input_files $clang_options -S -emit-llvm -O0 -Xclang -disable-O0-optnone
 
 ## LINK & PREPROCESS
 exe $LLVM_LINK *.ll -o out.ll -opaque-pointers
 
 echo -e "\xE2\x9C\x94 Emitted and linked IR."
+
+
 
 if [[ $debug_enabled == false ]]; then
     exe $OPT --enable-new-pm=1 --passes="strip-debug" out.ll -o out.ll
@@ -216,7 +218,7 @@ exe $OPT --enable-new-pm=1 --passes="lowerswitch" out.ll -o out.ll
 
 ## FuncRetToRef
 exe $OPT --enable-new-pm=1 -load-pass-plugin=$DIR/build/passes/libEDDI.so --passes="func-ret-to-ref" out.ll -o out.ll
-
+exit
 echo -e "\n=== ASPIS transformations =========="
 ## DATA PROTECTION
 case $dup in

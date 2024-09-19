@@ -12,6 +12,7 @@
 #include <list>
 #include <fstream>
 #include <iostream>
+#include "llvm/IR/DebugInfoMetadata.h"
 
 using namespace llvm;
   
@@ -116,4 +117,53 @@ DebugLoc findNearestDebugLoc(Instruction &I) {
   errs() << "Could not find nearest debug location! Aborting compilation.\n";
   abort();
   return nullptr;
+}
+
+void findLinkageName(const Module &M) {
+    for (const Function &F : M) {
+      //get DIsubprogram(debugnode):
+        if (auto *SP = F.getSubprogram()) {
+            if (!SP->getLinkageName().empty()) {
+                StringRef linkageName = F.getName();
+                errs() << "Function: " << SP->getName() << "\n";
+                errs() << "Linkage Name: " << linkageName << "\n";
+            } else {
+                errs() << "Function: " << SP->getName() << " has no linkage name\n";
+            }
+        } else {
+            errs() << "Function: " << SP->getName() << " has no debug info\n";
+        }
+    }
+}
+
+using LinkageMap = std::unordered_map<std::string, std::vector<StringRef>>;
+
+LinkageMap mapFunctionLinkageNames(const Module &M) {
+    LinkageMap linkageMap;
+
+    // Iterate through all functions in the module
+    for (const Function &F : M) {
+        if (DISubprogram *SP = F.getSubprogram()) {
+            StringRef linkageName = F.getName();
+            
+            // Only proceed if the linkage name is not empty
+            if (!linkageName.empty()) {
+                // Insert or append the linkage name to the map
+                linkageMap[std::string(SP->getName())].push_back(linkageName);
+            }
+        }
+    }
+
+    return linkageMap; // Return the populated map
+}
+
+#include "llvm/Support/raw_ostream.h"
+
+void printLinkageMap(const LinkageMap &linkageMap) {
+    for (const auto &entry : linkageMap) {
+        errs() << "Function Name: " << entry.first << "\n";
+        for (const StringRef &linkageName : entry.second) {
+            errs() << "  Linkage Name: " << linkageName << "\n";
+        }
+    }
 }
