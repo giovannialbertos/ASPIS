@@ -13,6 +13,8 @@
 #include <map>
 
 using namespace llvm;
+using LinkageMap = std::unordered_map<std::string, std::vector<StringRef>>;
+
 
 extern bool AlternateMemMapEnabled;
 extern std::string DuplicateSecName;
@@ -38,7 +40,6 @@ DebugLoc findNearestDebugLoc(Instruction &I);
 
 void findLinkageName(const Module &M);
 
-using LinkageMap = std::unordered_map<std::string, std::vector<StringRef>>;
 
 LinkageMap mapFunctionLinkageNames(const Module &M);
 void printLinkageMap(const LinkageMap &linkageMap);

@@ -15,6 +15,8 @@
 #include "llvm/IR/DebugInfoMetadata.h"
 
 using namespace llvm;
+using LinkageMap = std::unordered_map<std::string, std::vector<StringRef>>;
+
   
 bool AlternateMemMapEnabled;
 std::string DuplicateSecName;
@@ -136,19 +138,15 @@ void findLinkageName(const Module &M) {
     }
 }
 
-using LinkageMap = std::unordered_map<std::string, std::vector<StringRef>>;
 
 LinkageMap mapFunctionLinkageNames(const Module &M) {
     LinkageMap linkageMap;
 
-    // Iterate through all functions in the module
     for (const Function &F : M) {
         if (DISubprogram *SP = F.getSubprogram()) {
             StringRef linkageName = F.getName();
             
-            // Only proceed if the linkage name is not empty
             if (!linkageName.empty()) {
-                // Insert or append the linkage name to the map
                 linkageMap[std::string(SP->getName())].push_back(linkageName);
             }
         }
@@ -160,6 +158,7 @@ LinkageMap mapFunctionLinkageNames(const Module &M) {
 #include "llvm/Support/raw_ostream.h"
 
 void printLinkageMap(const LinkageMap &linkageMap) {
+  errs() << "in printing function\n";
     for (const auto &entry : linkageMap) {
         errs() << "Function Name: " << entry.first << "\n";
         for (const StringRef &linkageName : entry.second) {

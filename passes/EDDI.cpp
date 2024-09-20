@@ -38,6 +38,7 @@ using namespace llvm;
 
 #define DEBUG_TYPE "eddi_verification"
 
+
 /**
  * - 0: EDDI (Add checks at every basic block)
  * - 1: FDSC (Add checks only at basic blocks with more than one predecessor)  
@@ -653,6 +654,10 @@ PreservedAnalyses EDDI::run(Module &Md, ModuleAnalysisManager &AM) {
   LLVM_DEBUG(dbgs() << "Getting annotations... ");
   getFuncAnnotations(Md, FuncAnnotations);
   LLVM_DEBUG(dbgs() << "[done]\n");
+
+  LinkageMap linkageMap=mapFunctionLinkageNames(Md);
+  printLinkageMap(linkageMap);
+  
   std::map<Value *, Value *>
           DuplicatedInstructionMap; // is a map containing the instructions
                                     // and their duplicates
