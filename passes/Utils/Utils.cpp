@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/Support/Debug.h"
 
 using namespace llvm;
 using LinkageMap = std::unordered_map<std::string, std::vector<StringRef>>;
@@ -121,27 +122,8 @@ DebugLoc findNearestDebugLoc(Instruction &I) {
   return nullptr;
 }
 
-void findLinkageName(const Module &M) {
-    for (const Function &F : M) {
-      //get DIsubprogram(debugnode):
-        if (auto *SP = F.getSubprogram()) {
-            if (!SP->getLinkageName().empty()) {
-                StringRef linkageName = F.getName();
-                errs() << "Function: " << SP->getName() << "\n";
-                errs() << "Linkage Name: " << linkageName << "\n";
-            } else {
-                errs() << "Function: " << SP->getName() << " has no linkage name\n";
-            }
-        } else {
-            errs() << "Function: " << SP->getName() << " has no debug info\n";
-        }
-    }
-}
-
-
 LinkageMap mapFunctionLinkageNames(const Module &M) {
     LinkageMap linkageMap;
-
     for (const Function &F : M) {
         if (DISubprogram *SP = F.getSubprogram()) {
             StringRef linkageName = F.getName();
@@ -151,7 +133,6 @@ LinkageMap mapFunctionLinkageNames(const Module &M) {
             }
         }
     }
-
     return linkageMap; // Return the populated map
 }
 
@@ -175,11 +156,11 @@ StringRef getLinkageName(const LinkageMap &linkageMap, const std::string &functi
     // Check if the function name exists in the map
     if (it != linkageMap.end() && !it->second.empty()) {
         // Return the first linkage name from the vector
-        errs() << "  Linkage name given to "<<functionName <<": " << it->second.front() << "\n";
+        DEBUG_WITH_TYPE("linkage_verification",dbgs() << "Linkage name given to "<<functionName <<": " << it->second.front() << "\n");
         return it->second.front();
     } else {
         // Return an empty StringRef if the function name or linkage name is not found
-        errs() << "  no linkage name found for "<< functionName << "\n";
+        DEBUG_WITH_TYPE("linkage_verification",dbgs()<< "No linkage name found for "<< functionName << "\n");
         return StringRef();
     }
 }

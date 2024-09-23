@@ -656,7 +656,6 @@ PreservedAnalyses EDDI::run(Module &Md, ModuleAnalysisManager &AM) {
   LLVM_DEBUG(dbgs() << "[done]\n");
 
   LinkageMap linkageMap=mapFunctionLinkageNames(Md);
-  printLinkageMap(linkageMap);
   
   std::map<Value *, Value *>
           DuplicatedInstructionMap; // is a map containing the instructions

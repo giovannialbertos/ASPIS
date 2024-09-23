@@ -38,9 +38,6 @@ bool shouldCompile(Function &Fn,
 
 DebugLoc findNearestDebugLoc(Instruction &I);
 
-void findLinkageName(const Module &M);
-
-
 LinkageMap mapFunctionLinkageNames(const Module &M);
 void printLinkageMap(const LinkageMap &linkageMap);
 StringRef getLinkageName(const LinkageMap &linkageMap, const std::string &functionName);
