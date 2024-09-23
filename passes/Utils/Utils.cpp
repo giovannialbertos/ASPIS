@@ -158,11 +158,28 @@ LinkageMap mapFunctionLinkageNames(const Module &M) {
 #include "llvm/Support/raw_ostream.h"
 
 void printLinkageMap(const LinkageMap &linkageMap) {
-  errs() << "in printing function\n";
     for (const auto &entry : linkageMap) {
         errs() << "Function Name: " << entry.first << "\n";
         for (const StringRef &linkageName : entry.second) {
             errs() << "  Linkage Name: " << linkageName << "\n";
         }
+    }
+}
+
+
+// This function retrieves the first linkage name for the given function name
+StringRef getLinkageName(const LinkageMap &linkageMap, const std::string &functionName) {
+    // Find the function name in the linkageMap
+    auto it = linkageMap.find(functionName);
+
+    // Check if the function name exists in the map
+    if (it != linkageMap.end() && !it->second.empty()) {
+        // Return the first linkage name from the vector
+        errs() << "  Linkage name given to "<<functionName <<": " << it->second.front() << "\n";
+        return it->second.front();
+    } else {
+        // Return an empty StringRef if the function name or linkage name is not found
+        errs() << "  no linkage name found for "<< functionName << "\n";
+        return StringRef();
     }
 }

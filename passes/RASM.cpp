@@ -308,7 +308,7 @@ void RASM::createCFGVerificationBB (  BasicBlock &BB,
 
 PreservedAnalyses RASM::run(Module &Md, ModuleAnalysisManager &AM) {
     getFuncAnnotations(Md, FuncAnnotations);
-
+    LinkageMap linkageMap=mapFunctionLinkageNames(Md);
     // Collection of <BB, RandomSign
     std::map<BasicBlock*, int> RandomNumberBBs;
     std::map<BasicBlock*, int> SubRanPrevVals;
@@ -391,7 +391,7 @@ PreservedAnalyses RASM::run(Module &Md, ModuleAnalysisManager &AM) {
         BasicBlock *ErrBB = BasicBlock::Create(Fn.getContext(), "ErrBB", &Fn);
         IRBuilder<> ErrB(ErrBB);
         auto CalleeF = ErrBB->getModule()->getOrInsertFunction(
-            "SigMismatch_Handler", FunctionType::getVoidTy(Md.getContext()));
+            getLinkageName(linkageMap,"SigMismatch_Handler"), FunctionType::getVoidTy(Md.getContext()));
         ErrB.CreateCall(CalleeF)->setDebugLoc(debugLoc);
         ErrB.CreateUnreachable();
 

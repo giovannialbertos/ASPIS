@@ -758,8 +758,10 @@ PreservedAnalyses EDDI::run(Module &Md, ModuleAnalysisManager &AM) {
 
       // insert the code for calling the error basic block in case of a mismatch
       IRBuilder<> ErrB(ErrBB);
+      
       auto CalleeF = ErrBB->getModule()->getOrInsertFunction(
-          "DataCorruption_Handler", FunctionType::getVoidTy(Md.getContext()));
+          getLinkageName(linkageMap,"DataCorruption_Handler"), FunctionType::getVoidTy(Md.getContext()));
+
       auto *CallI = ErrB.CreateCall(CalleeF);
       ErrB.CreateUnreachable();
 

@@ -218,6 +218,7 @@ void CFCSS::createCFGVerificationBB (BasicBlock &BB,
 
 PreservedAnalyses CFCSS::run(Module &Md, ModuleAnalysisManager &AM) {
   getFuncAnnotations(Md, FuncAnnotations);
+  LinkageMap linkageMap=mapFunctionLinkageNames(Md);
 
   // assign a signature to each BB. BBSigs = map of basic blocks and their signatures
   std::map<BasicBlock *, int> BBSigs;
@@ -276,7 +277,7 @@ PreservedAnalyses CFCSS::run(Module &Md, ModuleAnalysisManager &AM) {
       }
       IRBuilder<> ErrB(ErrBB);
       auto CalleeF = ErrBB->getModule()->getOrInsertFunction(
-          "SigMismatch_Handler", FunctionType::getVoidTy(Md.getContext()));
+          getLinkageName(linkageMap,"SigMismatch_Handler"), FunctionType::getVoidTy(Md.getContext()));
       ErrB.CreateCall(CalleeF)->setDebugLoc(debugLoc);
       ErrB.CreateUnreachable();
       ErrBBs.insert(std::pair<Function*, BasicBlock*>(&Fn, ErrBB));
