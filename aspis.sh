@@ -190,8 +190,6 @@ EOF
     esac
 done
 
-echo "Clang options: $clang_options"
-
 if [[ $verbose == true ]]; then
     echo "Verbose mode ON"
     # Function to display commands
@@ -227,8 +225,11 @@ if [[ $debug_enabled == false ]]; then
     echo -e "\xE2\x9C\x94 Debug mode disabled, stripped debug symbols."
 fi
 
-exe $OPT --enable-new-pm=1 --passes="lowerswitch" out.ll -o out.ll
+    exe $OPT --enable-new-pm=1 --passes="lowerswitch" out.ll -o out.ll
 
+if [[ $libstdcpp_added == true ]]; then    
+    exe $OPT --enable-new-pm=1 --passes="lowerinvoke,simplifycfg" out.ll -o out.ll
+fi
 ## FuncRetToRef
 exe $OPT --enable-new-pm=1 -load-pass-plugin=$DIR/build/passes/libEDDI.so --passes="func-ret-to-ref" out.ll -o out.ll
 
@@ -296,7 +297,6 @@ if [[ -n "$asm_file" ]]; then
 fi;
 
 ## Backend
-echo $CLANG $clang_options -O0 out.ll $asm_files -o $output_file
 exe $CLANG $clang_options -O0 out.ll $asm_files -o $output_file 
 echo -e "\xE2\x9C\x94 Binary emitted."
 
