@@ -466,9 +466,9 @@ int EDDI::duplicateInstruction (Instruction &I, std::map<Value *, Value *> &Dupl
   if (isValueDuplicated(DuplicatedInstructionMap, I)) {
     return 0;
   }
-  
-  int res = 0;
-  
+
+  int res=0;
+
   // if the instruction is an alloca instruction we need to duplicate it
   if (isa<AllocaInst>(I)) {
     cloneInstr(I, DuplicatedInstructionMap);
@@ -525,7 +525,7 @@ int EDDI::duplicateInstruction (Instruction &I, std::map<Value *, Value *> &Dupl
     Function *Callee = CInstr->getCalledFunction();
     Callee = getFunctionFromDuplicate(Callee);
     // check if the function call has to be duplicated
-    if ((FuncAnnotations.find(Callee) != FuncAnnotations.end() && (*FuncAnnotations.find(Callee)).second.startswith("to_duplicate"))) {
+    if ((FuncAnnotations.find(Callee) != FuncAnnotations.end() && (*FuncAnnotations.find(Callee)).second.startswith("to_duplicate")) || isIntrinsicToDuplicate(CInstr)  ) {
       // duplicate the instruction
       cloneInstr(*CInstr, DuplicatedInstructionMap);
       
