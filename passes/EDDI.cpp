@@ -757,7 +757,8 @@ PreservedAnalyses EDDI::run(Module &Md, ModuleAnalysisManager &AM) {
 
       // insert the code for calling the error basic block in case of a mismatch
       IRBuilder<> ErrB(ErrBB);
-      
+
+      assert(!getLinkageName(linkageMap,"DataCorruption_Handler").empty() && "Function DataCorruption_Handler is missing!");
       auto CalleeF = ErrBB->getModule()->getOrInsertFunction(
           getLinkageName(linkageMap,"DataCorruption_Handler"), FunctionType::getVoidTy(Md.getContext()));
 

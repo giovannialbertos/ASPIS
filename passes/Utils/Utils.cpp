@@ -133,7 +133,7 @@ LinkageMap mapFunctionLinkageNames(const Module &M) {
             }
         }
     }
-    return linkageMap; // Return the populated map
+    return linkageMap;
 }
 
 #include "llvm/Support/raw_ostream.h"

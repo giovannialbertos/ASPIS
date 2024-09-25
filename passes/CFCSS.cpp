@@ -276,6 +276,8 @@ PreservedAnalyses CFCSS::run(Module &Md, ModuleAnalysisManager &AM) {
         }
       }
       IRBuilder<> ErrB(ErrBB);
+      
+      assert(!getLinkageName(linkageMap,"SigMismatch_Handler").empty() && "Function SigMismatch_Handler is missing!");
       auto CalleeF = ErrBB->getModule()->getOrInsertFunction(
           getLinkageName(linkageMap,"SigMismatch_Handler"), FunctionType::getVoidTy(Md.getContext()));
       ErrB.CreateCall(CalleeF)->setDebugLoc(debugLoc);
