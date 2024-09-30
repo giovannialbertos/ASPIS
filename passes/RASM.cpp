@@ -146,6 +146,11 @@ void RASM::createCFGVerificationBB (  BasicBlock &BB,
     int subRanPrevVal = SubRanPrevVals.find(&BB)->second;
     // in this case BB is not the first Basic Block of the function, so it has to update RuntimeSig and check it
     if (!BB.isEntryBlock()) {
+        if (isa<LandingPadInst>(BB.getFirstNonPHI())) {
+          IRBuilder<> BChecker(&*BB.getFirstInsertionPt());
+          BChecker.CreateStore(llvm::ConstantInt::get(IntType, randomNumberBB),&RuntimeSig);
+        }
+        else {
         BasicBlock *NewBB = BasicBlock::Create(BB.getContext(), "RASM_Verification_BB", BB.getParent(), &BB);
         IRBuilder<> BChecker(NewBB);
 
@@ -175,6 +180,7 @@ void RASM::createCFGVerificationBB (  BasicBlock &BB,
 
         // add NewBB and BB into the NewBBs map
         NewBBs.insert(std::pair<BasicBlock*, BasicBlock*>(NewBB, &BB));
+    }
     }
 
     // Add instructions for the second runtime signature update.
@@ -256,6 +262,9 @@ void RASM::createCFGVerificationBB (  BasicBlock &BB,
        * 3) more than three successors -> we have a switch: impossible since we lower switches in a previous pass
       */
       int numSuccessors = Terminator->getNumSuccessors();
+      if (numSuccessors>1 and Terminator->isExceptionalTerminator()){
+        numSuccessors=1;
+      }
       switch (numSuccessors)
       {
         case 1: {
