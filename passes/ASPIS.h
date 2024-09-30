@@ -4,6 +4,7 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Pass.h"
+#include <llvm/IR/Instructions.h>
 #include <map>
 
 using namespace llvm;
@@ -42,6 +43,7 @@ class EDDI : public PassInfoMixin<EDDI> {
         Function *getFunctionDuplicate(Function *Fn);
         Function *getFunctionFromDuplicate(Function *Fn);
         void duplicateGlobals (Module &Md, std::map<Value *, Value *> &DuplicatedInstructionMap);
+        bool isAllocaForExceptionHandling(AllocaInst &I);
         int duplicateInstruction (Instruction &I, std::map<Value *, Value *> &DuplicatedInstructionMap, BasicBlock &ErrBB);
         bool isValueDuplicated(std::map<Value *, Value *> &DuplicatedInstructionMap, Instruction &V);
         Function *duplicateFnArgs(Function &Fn, Module &Md, std::map<Value *, Value *> &DuplicatedInstructionMap);
@@ -68,6 +70,7 @@ class DuplicateGlobals : public PassInfoMixin<DuplicateGlobals> {
 
         static bool isRequired() { return true; }
 };
+
 
 // CONTROL-FLOW CHECKING
 class CFCSS : public PassInfoMixin<CFCSS> {
