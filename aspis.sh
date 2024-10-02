@@ -227,9 +227,6 @@ fi
 
     exe $OPT --enable-new-pm=1 --passes="lowerswitch" out.ll -o out.ll
 
-if [[ $libstdcpp_added == true ]]; then    
-    exe $OPT --enable-new-pm=1 --passes="lowerinvoke,simplifycfg" out.ll -o out.ll
-fi
 ## FuncRetToRef
 exe $OPT --enable-new-pm=1 -load-pass-plugin=$DIR/build/passes/libEDDI.so --passes="func-ret-to-ref" out.ll -o out.ll
 
@@ -248,7 +245,7 @@ case $dup in
 esac
 echo -e "\xE2\x9C\x94 Applied data protection passes."
 
-$OPT --enable-new-pm=1 --passes="simplifycfg" out.ll -o out.ll
+$OPT --enable-new-pm=1 --passes="dce,simplifycfg" out.ll -o out.ll
 
 
 ## CONTROL-FLOW CHECKING
