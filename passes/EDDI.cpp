@@ -676,9 +676,9 @@ int EDDI::duplicateInstruction(
     }
   }
 
-  else {
+ /*  else {
     errs() << I <<"\n";
-  }
+  } */
 
 /*   if (!isa<InvokeInst>(I)) {
     errs() << "it's an invoke";
