@@ -1,0 +1,38 @@
+= ASPISpp
+Sartorato Giovanni Alberto <giovannialberto.sartorato@mail.polimi.it>
+Personal code 10678032
+:source-highlighter: highlightjs
+:homepage: https://github.com/giovannialbertos/ASPISpp
+:cpp: C++
+
+
+For this project I forked ASPIS to support C++ compilation and tested it on multiple benchmarks.
+The fork can be found in my {homepage}[repository]. 
+The following are the changes i implemented:
+
+== Function mangling
+=== Problem
+This issue occurred when attempting to insert a call to an external error handler functions `dataCorruptionHandler` and `SigMismatch_Handler`, during the EDDI,RASM and CFCSS passes. 
+
+LLVM generates mangled names for functions, especially in C++ code for features such as overloaded functions and functions within different namespaces. However, when trying to insert the call to `dataCorruptionHandler` or `SigMismatch_Handler`, the pass used the unmangled version of the function name. The linkage lookup mechanism was unable to resolve the mangled function name, causing the pass to fail when inserting the call.
+
+=== Solution
+The functions `mapFunctionLinkageNames` and `getLinkageName` have been added to utils.
+
+In particular `mapFunctionLinkageNames` gets called at the beginnign of every pass and creates a map between the original function name and all the mangled names (since they can be more than 1).
+Then, when `dataCorruptionHandler` and `SigMismatch_Handler` have to be inserted the correct mangled name can be retrieved with `getLinkageName`.
+
+== Clang flags
+Added the flag `-lstdc++` to clang options in aspis.sh if at least one of the files in input is a {cpp} file to allow for {cpp} compilation.
+
+== Chapter
+=== Problem
+
+=== Solution
+
+
+[,Cpp]
+----
+
+----
+
