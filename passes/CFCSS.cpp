@@ -128,16 +128,24 @@ void CFCSS::sortBasicBlocks(const std::map<BasicBlock *, int> &BBSigs, const std
       CFGVerificationBB->insertInto(BB->getParent(), Pair.first);
 
       IRBuilder<> B(CFGVerificationBB);
-      Value *Cond = &CFGVerificationBB->back();
-      B.CreateCondBr(Cond, BB, FuncErrBBs.find(BB->getParent())->second);
+      // errs()<<"cond for "<<CFGVerificationBB->getName()<<": "<<
+      // Cond->getValueName() <<"\n";
 
+      if (!isa<InvokeInst>(BB->getTerminator())) {
+        Value *Cond = &CFGVerificationBB->back();
+        B.CreateCondBr(Cond, BB, FuncErrBBs.find(BB->getParent())->second);
+      }
+      else {
+        //if the BB has an invoke at the end branch unconditionally
+        B.CreateBr(BB);
+      }
       // move all the phi instructions from the next BB into the CFGVerificationBB
       while (isa<PHINode>(BB->front())) {
         Instruction &PHIInst = BB->front();
         PHIInst.removeFromParent();
         PHIInst.insertBefore(&CFGVerificationBB->front());
       }
-
+      
       // update each predecessor Pred of BB replacing their successors BB with CFGVerificationBB
       for (auto Inner : BBSigs) {
         auto *Pred = Inner.first;
@@ -145,8 +153,8 @@ void CFCSS::sortBasicBlocks(const std::map<BasicBlock *, int> &BBSigs, const std
         I->replaceSuccessorWith(BB, CFGVerificationBB);
       }
     }
+    }
   }
-}
 
 /**
  * Creates a new basic block for the CFG verification of basic block BB.
@@ -178,10 +186,19 @@ void CFCSS::createCFGVerificationBB (BasicBlock &BB,
     else PredSig = BBSigs.find(Predecessor)->second;
   }
 
+//no CFG for landingPad
+  IRBuilder<> B(C);
+
+  if (isa<LandingPadInst>(BB.getFirstNonPHI())) 
+  {
+    //if the BB start with a landing pad instruction don't create CFGVerificationBB
+    B.SetInsertPoint(&*BB.getFirstInsertionPt());
+    B.CreateStore(llvm::ConstantInt::get(IntType, CurSig), G);
+  }
+  else {
   // initialize new basic block, add it to the NewBBs and initialize the builder
   BasicBlock *CFGVerificationBB = BasicBlock::Create(C, "CFGVerificationBB_"+std::to_string(CurSig), BB.getParent());
   NewBBs->insert(std::pair<int, BasicBlock*>(CurSig, CFGVerificationBB));
-  IRBuilder<> B(C);
   B.SetInsertPoint(CFGVerificationBB);
 
   // create the body of the CFG verification basic block
@@ -199,9 +216,11 @@ void CFCSS::createCFGVerificationBB (BasicBlock &BB,
   else {
     // otherwise the result is just d ^ G
     XorRes = B.CreateXor(InstrDLower, InstrG);
+    
   }
   B.CreateStore(XorRes, G, false);
-
+  // compare the new run-time signature (stored in XorRes) with the signature of the block
+  
   // if the BB has a neighbor, it means that we also have to compute D
   int NeighborSig = getNeighborSig(BB, BBSigs);
   if (NeighborSig != -1) {
@@ -209,9 +228,8 @@ void CFCSS::createCFGVerificationBB (BasicBlock &BB,
         llvm::ConstantInt::get(IntType, CurSig ^ NeighborSig);
     B.CreateStore(InstrD, D);
   }
-
-  // compare the new run-time signature (stored in XorRes) with the signature of the block
   Value *Cond = B.CreateCmp(llvm::CmpInst::ICMP_EQ, XorRes, InstrCurSig);
+  }
 
   // the Branch instruction is inserted later in the function sortBasicBlocks()
 }
