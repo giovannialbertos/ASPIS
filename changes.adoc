@@ -5,7 +5,6 @@ Personal code 10678032
 :homepage: https://github.com/giovannialbertos/ASPISpp
 :cpp: C++
 
-
 For this project I forked ASPIS to support C++ compilation and tested it on multiple benchmarks.
 The fork can be found in my {homepage}[repository]. 
 The following are the changes i implemented:
@@ -25,11 +24,42 @@ Then, when `dataCorruptionHandler` and `SigMismatch_Handler` have to be inserted
 == Clang flags
 Added the flag `-lstdc++` to clang options in aspis.sh if at least one of the files in input is a {cpp} file to allow for {cpp} compilation.
 
-== Chapter
+== Duplicate certain intrinsic instructions
+=== Problem
+Certain intrinsic instructions weren't being duplicated in EDDI.
+=== Solution
+Added helper function `isIntrinsicToDuplicate` to utlis in oreder to check if the intrinsicID of that instruction corresponds to one that we want to duplicate. For now only memcpy gets duplicated but others can be added.
+
+== Avoid duplicating alloca for exception handling
+=== Problem
+Alloca instructions for exception handling were being duplicated in EDDI causing multiple allocations for exceptions leading to errors in the control flow.
+=== Solution
+Added `isAllocaForExceptionHandling` to check if any of the users of a given alloca instruction is a catch to avoid duplivating it.
+
+== Branches with exceptional terminators
+=== Problem
+In RASM when checking how many successor a block has to compute and update a runtime signature used for control flow integrity basic blocks with an invoke for terminator were considered with more than 1 successor, complicating the control flow.
+
+=== Solution
+A simple check has been added before to force the number of successors to 1 by overriding numSuccessorsIf the terminator is an exceptional terminator (like invoke, which branches based on whether an exception is thrown).
+This ensures that the exception handling logic is treated uniformly and reduces complexity when updating the runtime signature.
+
+== Generating verification basic blocks for landing pads
+=== Problem
+In RASM landing pads were treated like other blocks and verification instructions were inserted before the first instruction. This breaks the compilation because the first instruction has to be a landing pad one.
+
+=== Solution
+Create a special case for landing pads in `createCFGVerificationBB` to just create a store andat the first insertion point to write the constant randomNumberBB into the memory pointed to by RuntimeSig.
+
+== not calculate a new signature if BB is a landing pad and branch unconditionally if last instruction is an invoke
 === Problem
 
 === Solution
 
+== New benchmarks
+=== Problem
+
+=== Solution
 
 [,Cpp]
 ----
