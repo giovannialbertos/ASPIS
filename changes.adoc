@@ -13,12 +13,12 @@ The following are the changes i implemented:
 === Problem
 This issue occurred when attempting to insert a call to an external error handler functions `dataCorruptionHandler` and `SigMismatch_Handler`, during the EDDI,RASM and CFCSS passes. 
 
-LLVM generates mangled names for functions, especially in C++ code for features such as overloaded functions and functions within different namespaces. However, when trying to insert the call to `dataCorruptionHandler` or `SigMismatch_Handler`, the pass used the unmangled version of the function name. The linkage lookup mechanism was unable to resolve the mangled function name, causing the pass to fail when inserting the call.
+LLVM generates mangled names for functions, especially in {Cpp} code for features such as overloaded functions and functions within different namespaces. However, when trying to insert the call to `dataCorruptionHandler` or `SigMismatch_Handler`, the pass used the unmangled version of the function name. The linkage lookup mechanism was unable to resolve the mangled function name, causing the pass to fail when inserting the call.
 
 === Solution
 The functions `mapFunctionLinkageNames` and `getLinkageName` have been added to utils.
 
-In particular `mapFunctionLinkageNames` gets called at the beginnign of every pass and creates a map between the original function name and all the mangled names (since they can be more than 1).
+In particular `mapFunctionLinkageNames` gets called at the beginning of every pass and creates a map between the original function name and all the mangled names (since they can be more than 1).
 Then, when `dataCorruptionHandler` and `SigMismatch_Handler` have to be inserted the correct mangled name can be retrieved with `getLinkageName`.
 
 == Clang flags
@@ -28,41 +28,43 @@ Added the flag `-lstdc++` to clang options in aspis.sh if at least one of the fi
 === Problem
 Certain intrinsic instructions weren't being duplicated in EDDI.
 === Solution
-Added helper function `isIntrinsicToDuplicate` to utlis in oreder to check if the intrinsicID of that instruction corresponds to one that we want to duplicate. For now only memcpy gets duplicated but others can be added.
+Added helper function `isIntrinsicToDuplicate` to utils in order to check if the intrinsicID of that instruction corresponds to one that we want to duplicate. For now only memcpy gets duplicated but others can be added.
 
 == Avoid duplicating alloca for exception handling
 === Problem
 Alloca instructions for exception handling were being duplicated in EDDI causing multiple allocations for exceptions leading to errors in the control flow.
 === Solution
-Added `isAllocaForExceptionHandling` to check if any of the users of a given alloca instruction is a catch to avoid duplivating it.
+Added `isAllocaForExceptionHandling` to check if any of the users of a given alloca instruction is a catch to avoid duplicating it.
 
 == Branches with exceptional terminators
 === Problem
 In RASM when checking how many successor a block has to compute and update a runtime signature used for control flow integrity basic blocks with an invoke for terminator were considered with more than 1 successor, complicating the control flow.
 
 === Solution
-A simple check has been added before to force the number of successors to 1 by overriding numSuccessorsIf the terminator is an exceptional terminator (like invoke, which branches based on whether an exception is thrown).
+A simple check has been added before to force the number of successors to 1 by overriding numSuccessors if the terminator is an exceptional terminator (like invoke, which branches based on whether an exception is thrown).
 This ensures that the exception handling logic is treated uniformly and reduces complexity when updating the runtime signature.
 
 == Generating verification basic blocks for landing pads
 === Problem
-In RASM landing pads were treated like other blocks and verification instructions were inserted before the first instruction. This breaks the compilation because the first instruction has to be a landing pad one.
+In RASM and CFCSS landing pads were treated like other blocks and verification instructions were inserted before the first instruction. This breaks the compilation because the first instruction has to be a landing pad instruction.
 
 === Solution
-Create a special case for landing pads in `createCFGVerificationBB` to just create a store andat the first insertion point to write the constant randomNumberBB into the memory pointed to by RuntimeSig.
+Create a special case for landing pads in `createCFGVerificationBB` in RASM and CFCSS to just create a store at the first insertion point to write the constant randomNumberBB into the memory pointed to by RuntimeSig.
 
-== not calculate a new signature if BB is a landing pad and branch unconditionally if last instruction is an invoke
+== Branch unconditionally in case of an invoke
 === Problem
-
+In `CFCSS::sortBasicBlocks` blocks with an invoke terminator were treated like other blocks and a conditional branch was created every time. 
+When a basic block ends with InvokeInst, the exception handling is already managed by the InvokeInst itself, so no additional conditional branching is needed.
 === Solution
+Added a check to see if a block has an invoke as a terminator and in that case add an unconditional branch.
 
 == New benchmarks
-=== Problem
+All the changes have been tested on multiple benchmarks, in particular in examples/cpp-benchmarks i wrote `full_test.cpp` to test various {Cpp} programming features, in particular:
 
-=== Solution
+* Basic Functions (with overloading);
+* Classes and Inheritance (member functions, constructor, virtual function, inheritance and polymorphism with DerivedClass);
+* Templates;
+* Recursion;
+* Exception Handling.
 
-[,Cpp]
-----
-
-----
 
