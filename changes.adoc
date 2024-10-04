@@ -1,13 +1,17 @@
 = ASPISpp
 Sartorato Giovanni Alberto <giovannialberto.sartorato@mail.polimi.it>
-Personal code 10678032
 :source-highlighter: highlightjs
 :homepage: https://github.com/giovannialbertos/ASPISpp
-:cpp: C++
+:cpp: C++   
 
-For this project I forked ASPIS to support C++ compilation and tested it on multiple benchmarks.
+[.normal-size]
+Sartorato Giovanni Alberto +
+giovannialberto.sartorato@mail.polimi.it +
+Person code: 10678032
+
+For this project ASPIS was forked to support C++ compilation and tested on multiple benchmarks.
 The fork can be found in my {homepage}[repository]. 
-The following are the changes I implemented:
+The following are the changes that were implemented:
 
 == Function mangling
 === Problem
@@ -22,35 +26,35 @@ The functions `mapFunctionLinkageNames` and `getLinkageName` were added to utils
 Then, when `dataCorruptionHandler` and `SigMismatch_Handler` need to be inserted, the correct mangled name is retrieved using `getLinkageName`.
 
 == Clang flags
-AdI added the flag `-lstdc++` to Clang options in `aspis.sh` to enable {cpp} compilation if at least one of the input files is a {Cpp} file.
+The flag `-lstdc++` was added to Clang options in `aspis.sh` to enable {cpp} compilation if at least one of the input files is a {Cpp} file.
 
 == Duplicate certain intrinsic instructions
 === Problem
 Certain intrinsic instructions weren't being duplicated in EDDI.
 
 === Solution
-I added the helper function `isIntrinsicToDuplicate` in `utils` to check if the `intrinsicID` of an instruction corresponds to one that should be duplicated. Currently, only `memcpy` is duplicated, but other intrinsics can be added as needed.
+The helper function `isIntrinsicToDuplicate` was added to `utils` to check if the `intrinsicID` of an instruction corresponds to one that should be duplicated. Currently, only `memcpy` is duplicated, but other intrinsics can be added as needed.
 
 == Avoid duplicating alloca for exception handling
 === Problem
 `alloca` instructions for exception handling were being duplicated in EDDI, causing multiple allocations for exceptions and leading to control flow errors.
 
 === Solution
-I added `isAllocaForExceptionHandling`, which checks if any of the users of a given `alloca` instruction is a `catch`, to avoid duplicating it.
+`isAllocaForExceptionHandling` was added, which checks if any of the users of a given `alloca` instruction is a `catch`, to avoid duplicating it.
 
 == Branches with Exceptional Terminators
 === Problem
 In RASM, when checking the number of successors a block has to compute and update a runtime signature used for control flow integrity, basic blocks with an `invoke` as the terminator were treated as having multiple successors, which complicated control flow.
 
 === Solution
-AA check was added to force the number of successors to 1 by overriding `numSuccessors` if the terminator is an exceptional terminator (such as `invoke`, which branches based on whether an exception is thrown). This ensures that exception handling is treated uniformly and simplifies the process of updating the runtime signature.
+A check was added to force the number of successors to 1 by overriding `numSuccessors` if the terminator is an exceptional terminator (such as `invoke`, which branches based on whether an exception is thrown). This ensures that exception handling is treated uniformly and simplifies the process of updating the runtime signature.
 
 == Generating verification basic blocks for landing pads
 === Problem
 In RASM and CFCSS, landing pads were treated like regular blocks, and verification instructions were inserted before the first instruction. This caused compilation failures because the first instruction in a landing pad must be the landing pad instruction itself.
 
 === Solution
-I created a special case for landing pads in `createCFGVerificationBB` in RASM and CFCSS. Instead of inserting verification instructions before the first instruction, I created a store instruction at the first insertion point, writing `randomNumberBB` into the memory pointed to by `RuntimeSig`.
+A special case for landing pads was created in `createCFGVerificationBB` in RASM and CFCSS. Instead of inserting verification instructions before the first instruction, a store instruction is created at the first insertion point, writing `randomNumberBB` into the memory pointed to by `RuntimeSig`.
 
 
 == Branch unconditionally in case of an invoke
@@ -58,10 +62,10 @@ I created a special case for landing pads in `createCFGVerificationBB` in RASM a
 In `CFCSS::sortBasicBlocks`, blocks with an `invoke` terminator were treated like other blocks, and a conditional branch was created. However, when a basic block ends with an `InvokeInst`, exception handling is already managed by the `InvokeInst`, so no additional conditional branching is necessary.
 
 === Solution
-I added a check to see if a block has an `invoke` as its terminator. In such cases, an unconditional branch is added instead of a conditional one.
+A check was added to see if a block has an `invoke` as its terminator. In such cases, an unconditional branch is added instead of a conditional one.
 
 == New benchmarks
-All changes were tested on multiple benchmarks. In particular, in `examples/cpp-benchmarks`, I wrote `full_test.cpp` to test various {Cpp} programming features, including:
+All changes were tested on multiple benchmarks. In particular, in `examples/cpp-benchmarks`, `full_test.cpp` was added to test various {Cpp} programming features, including:
 
 * Basic Functions (with overloading);
 * Classes and inheritance (member functions, constructors, virtual functions, inheritance and polymorphism with DerivedClass);
